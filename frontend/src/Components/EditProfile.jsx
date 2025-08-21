@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import UserCard from "./UserCard";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
@@ -12,28 +12,46 @@ const EditProfile = ({ user }) => {
   const [age, setAge] = useState(user.age || "");
   const [gender, setGender] = useState(user.gender);
   const [about, setAbout] = useState(user.about);
-  const [skills, setSkills] = useState(user.skills || []);
+  // **FIX**: Manage skills as a string in the state
+  const [skills, setSkills] = useState(user.skills ? user.skills.join(", ") : "");
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
   const dispatch = useDispatch();
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setPhotoURL(URL.createObjectURL(file));
+    }
+  };
 
   const saveProfile = async () => {
-    //clearing the errors
     setError("");
     try {
+      const formData = new FormData();
+      formData.append("firstName", firstName);
+      formData.append("lastName", lastName);
+      formData.append("photoURL", photoURL);
+      formData.append("age", age);
+      formData.append("gender", gender);
+      formData.append("about", about);
+      formData.append("skills", skills); // Send skills as a comma-separated string
+
+      if (imageFile) {
+        formData.append("photo", imageFile);
+      }
+
       const res = await axios.post(
         BASE_URL + "/profile/edit",
-        {
-          firstName,
-          lastName,
-          photoURL,
-          age,
-          gender,
-          about,
-          skills,
-        },
+        formData,
         {
           withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
       dispatch(addUser(res.data.data));
@@ -42,13 +60,13 @@ const EditProfile = ({ user }) => {
         setShowToast(false);
       }, 3000);
     } catch (error) {
-      setError(error.response.data);
+      setError(error.response?.data?.message || "An error occurred");
     }
   };
 
   return (
     <>
-      <div className="flex justify-center  my-10 max ">
+      <div className="flex justify-center my-10 max ">
         <div className="flex justify-center mx-10 ">
           <div className="card bg-base-300 w-96 shadow-xl">
             <div className="card-body">
@@ -87,17 +105,24 @@ const EditProfile = ({ user }) => {
                     className="input input-bordered w-full max-w-xs"
                   />
                 </label>
-                <label className="form-control w-full max-w-xs my-2">
-                  <div className="label">
-                    <span className="label-text">PhotoURL</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={photoURL}
-                    onChange={(e) => setPhotoURL(e.target.value)}
-                    className="input input-bordered w-full max-w-xs"
-                  />
-                </label>
+                <div className="form-control w-full max-w-xs my-2">
+                    <div className="label">
+                        <span className="label-text">Photo</span>
+                    </div>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                        accept="image/*"
+                    />
+                    <button
+                        onClick={() => fileInputRef.current.click()}
+                        className="btn btn-outline w-full max-w-xs"
+                    >
+                        Upload Photo
+                    </button>
+                </div>
                 <label className="form-control w-full max-w-xs my-2">
                   <div className="label">
                     <span className="label-text">Gender</span>
@@ -133,7 +158,8 @@ const EditProfile = ({ user }) => {
                   <input
                     type="text"
                     value={skills}
-                    onChange={(e) => setSkills(e.target.value.split(","))}
+                    // **FIX**: Directly set the string value on change
+                    onChange={(e) => setSkills(e.target.value)}
                     className="input input-bordered w-full max-w-xs"
                   />
                 </label>
@@ -161,7 +187,16 @@ const EditProfile = ({ user }) => {
           </div>
         </div>
         <UserCard
-          user={{ firstName, lastName, photoURL, about, age, gender , skills }}
+          user={{ 
+            firstName, 
+            lastName, 
+            photoURL, 
+            about, 
+            age, 
+            gender, 
+            // **FIX**: Convert skills string to an array for the preview card
+            skills: skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : []
+          }}
         />
       </div>
       {showToast && (

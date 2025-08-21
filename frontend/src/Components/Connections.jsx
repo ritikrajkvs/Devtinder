@@ -73,11 +73,8 @@ const Connections = () => {
                 </div>
                 <div>
                   <h2 className="font-bold">{firstName} {lastName}</h2>
-                  {/* This provides a safe fallback if 'about' is null or undefined */}
-                  <p className="text-sm opacity-70 truncate">
-                    {about ? about : "No bio available."}
-                  </p>
-              </div>
+                  <p className="text-sm opacity-70 truncate">{about || "No bio available."}</p>
+                </div>
               </div>
             );
           })}

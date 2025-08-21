@@ -73,7 +73,7 @@ const Connections = () => {
                 </div>
                 <div>
                   <h2 className="font-bold">{firstName} {lastName}</h2>
-                  <p className="text-sm opacity-70 truncate">{about || "No bio available."}</p>
+                  <p className="text-sm opacity-70 truncate">{about}</p>
                 </div>
               </div>
             );

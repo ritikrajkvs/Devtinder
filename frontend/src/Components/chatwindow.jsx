@@ -1,86 +1,133 @@
-// File: frontend/src/Components/ChatWindow.jsx
-// Description: Correctly handles socket events and filters messages by re-establishing listeners.
-
+// frontend/src/Components/ChatWindow.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
-import io from "socket.io-client";
+import { io } from "socket.io-client";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 
 const ChatWindow = ({ selectedUser }) => {
   const loggedInUser = useSelector((store) => store.user);
-  const [socket, setSocket] = useState(null);
+  const socketRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
 
-  // CORRECTED EFFECT: This hook now manages both the socket connection and its event listeners together.
+  // Create socket when user logs in / selectedUser changes.
   useEffect(() => {
-    // Only proceed if we have both the logged-in user and a selected user to chat with.
-    if (loggedInUser?._id && selectedUser?._id) {
-      // Establish a new socket connection.
-      const newSocket = io("http://localhost:3000", {
-        query: { userId: loggedInUser._id },
-      });
-      setSocket(newSocket);
+    if (!loggedInUser?._id) return;
 
-      // Set up the listener for incoming 'newMessage' events.
-      newSocket.on("newMessage", (incomingMessage) => {
-        // This is the crucial filter: only add the new message to the state if it's from
-        // the user we are currently chatting with. This prevents messages from other
-        // conversations from appearing in the wrong window.
-        if (incomingMessage.senderId === selectedUser._id) {
-          setMessages((prevMessages) => [...prevMessages, incomingMessage]);
-        }
-      });
-
-      // Cleanup function: This is essential. It runs when the component unmounts OR
-      // when the `selectedUser` changes. It closes the old socket connection before a new one
-      // is made, which prevents memory leaks and duplicate, conflicting event listeners.
-      return () => newSocket.close();
+    // Close old socket if exists
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
     }
-  }, [loggedInUser, selectedUser]); // DEPENDENCY FIX: By adding `selectedUser`, this effect re-runs
-                                     // every time you click on a different connection.
 
-  // This effect fetches the historical chat messages when a new user is selected.
+    // Connect socket with userId in query
+    const s = io("http://localhost:3000", {
+      query: { userId: loggedInUser._id },
+      transports: ["websocket"],
+    });
+    socketRef.current = s;
+
+    s.on("connect", () => {
+      console.log("Socket connected", s.id);
+    });
+
+    s.on("connect_error", (err) => {
+      console.error("Socket connect_error:", err);
+    });
+
+    // Generic listener for incoming messages
+    s.on("newMessage", (incomingMessage) => {
+      try {
+        const incomingSender = String(incomingMessage.senderId);
+        const incomingReceiver = String(incomingMessage.receiverId);
+        const me = String(loggedInUser._id);
+        const other = String(selectedUser?._id);
+
+        // Only append messages that belong to this conversation
+        if (
+          (incomingSender === me && incomingReceiver === other) ||
+          (incomingSender === other && incomingReceiver === me)
+        ) {
+          setMessages((prev) => {
+            // avoid duplicates (if message already present by _id)
+            if (
+              incomingMessage._id &&
+              prev.some((m) => String(m._id) === String(incomingMessage._id))
+            ) {
+              return prev;
+            }
+            return [...prev, incomingMessage];
+          });
+        }
+      } catch (e) {
+        console.error("Error handling incoming message:", e);
+      }
+    });
+
+    // update online users (optional)
+    s.on("getOnlineUsers", (list) => {
+      console.log("Online users:", list);
+    });
+
+    return () => {
+      s.disconnect();
+      socketRef.current = null;
+    };
+  }, [loggedInUser, selectedUser]);
+
+  // Fetch chat history for selected user
   useEffect(() => {
     const fetchHistory = async () => {
-      if (selectedUser?._id) {
-        try {
-          const res = await axios.get(
-            `${BASE_URL}/chat/history/${selectedUser._id}`,
-            { withCredentials: true }
-          );
-          setMessages(res.data);
-        } catch (err) {
-          console.error("Failed to fetch chat history", err);
-          setMessages([]); // Clear previous messages in case of an error
-        }
+      if (!selectedUser?._id || !loggedInUser?._id) return;
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/chat/history/${selectedUser._id}`,
+          { withCredentials: true }
+        );
+        // Normalize: ensure ids are strings
+        const normalized = res.data.map((m) => ({
+          ...m,
+          senderId: String(m.senderId),
+          receiverId: String(m.receiverId),
+        }));
+        setMessages(normalized);
+      } catch (err) {
+        console.error("Failed to fetch chat history", err);
+        setMessages([]);
       }
     };
     fetchHistory();
-  }, [selectedUser]);
+  }, [selectedUser, loggedInUser]);
 
-  // This effect automatically scrolls the chat window to the bottom when new messages are added.
+  // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (newMessage.trim() === "" || !socket) return;
+    if (newMessage.trim() === "" || !socketRef.current || !selectedUser?._id) return;
 
     const messagePayload = {
-      senderId: loggedInUser._id,
-      receiverId: selectedUser._id,
-      message: newMessage,
+      senderId: String(loggedInUser._id),
+      receiverId: String(selectedUser._id),
+      message: newMessage.trim(),
     };
-    
-    // Send the message to the server via the socket.
-    socket.emit("sendMessage", messagePayload);
 
-    // Optimistically update the sender's UI immediately for a responsive feel.
-    setMessages((prevMessages) => [...prevMessages, { ...messagePayload, createdAt: new Date().toISOString() }]);
+    // Use ack to learn whether server saved it. Server will also emit 'newMessage' back.
+    socketRef.current.emit("sendMessage", messagePayload, (ack) => {
+      if (!ack) {
+        console.error("No acknowledgement from server");
+      } else if (!ack.ok) {
+        console.error("Send failed:", ack.error);
+        // Optional: notify user
+      } else {
+        // Server will emit 'newMessage' to both sides; we don't push it locally here
+      }
+    });
+
     setNewMessage("");
   };
 
@@ -91,25 +138,29 @@ const ChatWindow = ({ selectedUser }) => {
       <h2 className="text-xl font-bold mb-4 border-b border-gray-600 pb-2 text-white">
         Chat with {selectedUser.firstName} {selectedUser.lastName}
       </h2>
-      
+
       <div className="flex-grow overflow-y-auto mb-4 p-2">
         {messages.map((msg, index) => (
           <div
             key={msg._id || index}
             className={`chat ${
-              msg.senderId === loggedInUser?._id ? "chat-end" : "chat-start"
+              String(msg.senderId) === String(loggedInUser?._id) ? "chat-end" : "chat-start"
             }`}
           >
-            <div className={`chat-bubble ${
-              msg.senderId === loggedInUser?._id ? "chat-bubble-primary" : "chat-bubble-secondary"
-            }`}>
+            <div
+              className={`chat-bubble ${
+                String(msg.senderId) === String(loggedInUser?._id)
+                  ? "chat-bubble-primary"
+                  : "chat-bubble-secondary"
+              }`}
+            >
               {msg.message}
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
-      
+
       <form onSubmit={handleSendMessage} className="flex gap-2 mt-auto">
         <input
           type="text"

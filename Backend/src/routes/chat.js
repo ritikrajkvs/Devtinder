@@ -6,6 +6,7 @@ const Message = require("../Models/message");
 
 // Get messages between the logged-in user and another user
 chatRouter.get("/chat/history/:otherUserId", userAuth, async (req, res) => {
+  console.log("Fetching chat history");
   try {
     const loggedInUserId = req.user._id;
     const otherUserId = req.params.otherUserId;

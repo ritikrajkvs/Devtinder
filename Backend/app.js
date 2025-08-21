@@ -5,6 +5,7 @@ const app = express();
 const dotenv = require("dotenv");
 dotenv.config({});
 const cors = require("cors");
+const path = require("path");
 
 app.use(
   cors({
@@ -15,6 +16,7 @@ app.use(
 
 app.use(express.json());
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 //routes
 const authRouter = require("./src/routes/auth");

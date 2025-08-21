@@ -54,16 +54,11 @@ const userSchema = new mongoose.Schema(
     },
     about: {
       type: String,
-      // default: "Dev is in search for someone here",
     },
     photoURL: {
       type: String,
       default: "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1740779693~exp=1740783293~hmac=3ffc11733917c931bddeec957e8fa649e6a1590282b3210d816ccbf54dab2e94&w=900",
-      validate(value) {
-        if (!validator.isURL(value)) {
-          throw new Error("Invalid URL :" + value);
-        }
-      },
+      // Validation removed to allow both Cloudinary URLs and local paths
     },
     skills: {
       type: [String],
@@ -85,11 +80,6 @@ userSchema.methods.getjwt = async function () {
 
   return token;
 };
-
-// userSchema.methods.encryptPassword = async function (passwordInputByUser) {
-//     const passwordHash = await bcrypt.hash(passwordInputByUser, 10)
-//     return passwordHash
-// }
 
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
   const user = this;

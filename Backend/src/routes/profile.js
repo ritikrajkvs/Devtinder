@@ -23,7 +23,10 @@ profileRouter.post(
       const loggedInUser = req.user;
 
       // **FIXED**: Handle skills and other fields correctly from multipart form
-      Object.keys(req.body).forEach((key) => {
+     Object.keys(req.body).forEach((key) => {
+        // Skip photoURL as it's handled by the file upload
+        if (key === 'photoURL') return; 
+
         if (key === 'skills' && typeof req.body.skills === 'string') {
           loggedInUser.skills = req.body.skills.split(',').map(s => s.trim()).filter(Boolean);
         } else {
@@ -31,8 +34,7 @@ profileRouter.post(
         }
       });
 
-      if (req.file) {
-        // For Cloudinary, the URL is in req.file.path
+       if (req.file) {
         loggedInUser.photoURL = req.file.path; 
       }
 

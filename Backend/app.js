@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 dotenv.config({});
 const cors = require("cors");
 const path = require("path");
+const chatRouter = require("./src/routes/chat");
 
 // 1. Import http and Server from socket.io
 const http = require("http");
@@ -23,6 +24,7 @@ const io = new Server(server, {
   },
 });
 
+app.use("/api", chatRouter);
 app.use(
   cors({
     origin: "http://localhost:5173",

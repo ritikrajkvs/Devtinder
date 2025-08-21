@@ -34,7 +34,7 @@ const EditProfile = ({ user }) => {
       const formData = new FormData();
       formData.append("firstName", firstName);
       formData.append("lastName", lastName);
-      formData.append("photoURL", photoURL);
+     // formData.append("photoURL", photoURL);
       formData.append("age", age);
       formData.append("gender", gender);
       formData.append("about", about);

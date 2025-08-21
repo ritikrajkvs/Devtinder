@@ -3,6 +3,7 @@ import React from "react";
 import { BASE_URL } from "../utils/constants";
 import { useDispatch } from "react-redux";
 import { removeUserFromFeed } from "../utils/feedSlice";
+import { addRequests } from "../utils/requestSlice";
 
 const UserCard = ({ user }) => {
   console.log(user);
@@ -22,6 +23,7 @@ const UserCard = ({ user }) => {
         }
       );
       dispatch(removeUserFromFeed(userId));
+      // dispatch(addRequests(userId));
     } catch (error) {
       console.log(error);
     }

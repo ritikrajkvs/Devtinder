@@ -19,7 +19,7 @@ const ChatWindow = ({ selectedUser }) => {
     // Only proceed if we have both the logged-in user and a selected user to chat with.
     if (loggedInUser?._id && selectedUser?._id) {
       // Establish a new socket connection.
-      const newSocket = io("http://localhost:3000", {
+      const newSocket = io("https://devtinder-8i1r.onrender.com", {
         query: { userId: loggedInUser._id },
       });
       setSocket(newSocket);

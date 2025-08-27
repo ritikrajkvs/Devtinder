@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        target: "https://devtinder-8i1r.onrender.com",
         changeOrigin: true,
         secure: false,
       },

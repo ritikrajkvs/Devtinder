@@ -6,7 +6,7 @@ import { BASE_URL } from "../utils/constants";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addConnection, removeConnection } from "../utils/connectionSlice";
-import ChatWindow from "./ChatWindow"; // Import the new ChatWindow component
+import ChatWindow from "./chatwindow"; // Import the new ChatWindow component
 
 const Connections = () => {
   const connections = useSelector((store) => store.connection);

@@ -18,7 +18,7 @@ const server = http.createServer(app);
 // 3. Initialize Socket.IO with CORS configuration
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Your frontend URL
+    origin: "splendorous-platypus-d907a0.netlify.app", // Your frontend URL
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -27,7 +27,7 @@ const io = new Server(server, {
 // ✅ Middlewares (order matters!)
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "splendorous-platypus-d907a0.netlify.app",
     credentials: true,
   })
 );

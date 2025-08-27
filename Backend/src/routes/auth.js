@@ -49,7 +49,7 @@ authRouter.post("/signup", async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,              // Prevents JS access
       secure: process.env.NODE_ENV === "production", // only https in prod
-      sameSite: "strict",          // protects against CSRF
+      sameSite: "none",          // protects against CSRF
       maxAge: 8 * 3600000,         // 8 hours
     });
 
@@ -85,7 +85,7 @@ authRouter.post("/login", async (req, res) => {
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "none",
         maxAge: 8 * 3600000,
       });
 

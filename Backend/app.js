@@ -18,7 +18,7 @@ const server = http.createServer(app);
 // 3. Initialize Socket.IO with CORS configuration
 const io = new Server(server, {
   cors: {
-    origin: "splendorous-platypus-d907a0.netlify.app", // Your frontend URL
+    origin: "https://dapper-sunshine-728962.netlify.app", // Correct frontend URL
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -27,7 +27,7 @@ const io = new Server(server, {
 // ✅ Middlewares (order matters!)
 app.use(
   cors({
-    origin: "splendorous-platypus-d907a0.netlify.app",
+    origin: "https://dapper-sunshine-728962.netlify.app", // *** YOU NEED TO UPDATE THIS LINE ***
     credentials: true,
   })
 );

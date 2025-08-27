@@ -98,8 +98,3 @@ The frontend is deployed on Netlify and the backend is deployed on Render.
 
   * **Frontend URL**: [https://ubiquitous-naiad-ba85d9.netlify.app](https://ubiquitous-naiad-ba85d9.netlify.app)
   * **Backend URL**: [https://devtinder-8i1r.onrender.com](https://devtinder-8i1r.onrender.com)
-
-## Future Enhancements
-
-  * **Messaging System**: Enhance the real-time chat with more features.
-  * **Profile Search & Filtering**: Implement advanced search and filtering capabilities for user profiles.

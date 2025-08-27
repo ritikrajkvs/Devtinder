@@ -70,10 +70,6 @@ DevTinder is a full-stack MERN application designed for developers to connect, c
       * Install dependencies: `npm install`
       * Start the frontend development server: `npm run dev`
 
-## API Endpoints
-
-A detailed list of API endpoints can be found in the [Backend README](https://www.google.com/search?q=./Backend/README.md).
-
 ## Project Structure
 
 ```

@@ -44,67 +44,91 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[85vh] px-4">
-      <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-8">
-        <h2 className="text-2xl font-bold text-center text-white mb-1">
-          {isLoginFrom ? "Sign in to DevTinder" : "Create Account"}
-        </h2>
-        <p className="text-center text-slate-400 text-sm mb-8">
-          {isLoginFrom ? "Welcome back, developer!" : "Join the community today."}
-        </p>
+    <div className="min-h-[80vh] flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-gray-800/50 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 overflow-hidden">
+        {/* Header Section */}
+        <div className="px-8 pt-8 pb-6 text-center">
+            <h2 className="text-3xl font-bold text-white mb-2">
+                {isLoginFrom ? "Welcome Back" : "Create Account"}
+            </h2>
+            <p className="text-gray-400 text-sm">
+                {isLoginFrom ? "Login to find your perfect dev match" : "Join the community of developers"}
+            </p>
+        </div>
 
-        <div className="flex flex-col gap-4">
+        {/* Form Section */}
+        <div className="px-8 pb-8 space-y-4">
           {!isLoginFrom && (
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="input input-bordered bg-slate-900 border-slate-600 text-white w-full focus:outline-none focus:border-emerald-500"
-                placeholder="First Name"
-              />
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="input input-bordered bg-slate-900 border-slate-600 text-white w-full focus:outline-none focus:border-emerald-500"
-                placeholder="Last Name"
-              />
+            <div className="flex gap-4">
+              <label className="form-control w-full">
+                <span className="label-text text-gray-300 font-semibold mb-1">First Name</span>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="input input-bordered bg-gray-900/50 border-gray-600 focus:border-green-500 text-white w-full rounded-xl"
+                  placeholder="John"
+                />
+              </label>
+              <label className="form-control w-full">
+                <span className="label-text text-gray-300 font-semibold mb-1">Last Name</span>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="input input-bordered bg-gray-900/50 border-gray-600 focus:border-green-500 text-white w-full rounded-xl"
+                  placeholder="Doe"
+                />
+              </label>
             </div>
           )}
-          
-          <input
-            type="text"
-            value={emailId}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input input-bordered bg-slate-900 border-slate-600 text-white w-full focus:outline-none focus:border-emerald-500"
-            placeholder="Email Address"
-          />
-          
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input input-bordered bg-slate-900 border-slate-600 text-white w-full focus:outline-none focus:border-emerald-500"
-            placeholder="Password"
-          />
 
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          <label className="form-control w-full">
+            <span className="label-text text-gray-300 font-semibold mb-1">Email Address</span>
+            <input
+              type="text"
+              value={emailId}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input input-bordered bg-gray-900/50 border-gray-600 focus:border-green-500 text-white w-full rounded-xl"
+              placeholder="developer@example.com"
+            />
+          </label>
 
-          <button
-            className="btn bg-emerald-500 hover:bg-emerald-600 text-white border-none w-full mt-2 normal-case text-lg"
-            onClick={isLoginFrom ? handleLogin : handleSignUp}
-          >
-            {isLoginFrom ? "Login" : "Sign Up"}
-          </button>
+          <label className="form-control w-full">
+            <span className="label-text text-gray-300 font-semibold mb-1">Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input input-bordered bg-gray-900/50 border-gray-600 focus:border-green-500 text-white w-full rounded-xl"
+              placeholder="••••••••"
+            />
+          </label>
 
-          <div className="text-center mt-4">
-            <span
-              className="text-slate-400 text-sm cursor-pointer hover:text-emerald-400 transition"
-              onClick={() => { setIsLoginForm(!isLoginFrom); setError(""); }}
+          {error && <p className="text-red-400 text-sm text-center bg-red-900/20 py-2 rounded-lg">{error}</p>}
+
+          <div className="pt-4">
+            <button
+              className="btn btn-primary w-full text-lg rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 border-none hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-900/20"
+              onClick={isLoginFrom ? handleLogin : handleSignUp}
             >
-              {isLoginFrom ? "New here? Create an account" : "Already have an account? Login"}
-            </span>
+              {isLoginFrom ? "Login" : "Sign Up"}
+            </button>
+          </div>
+
+          <div className="text-center pt-2">
+            <p className="text-gray-400 text-sm">
+              {isLoginFrom ? "Don't have an account? " : "Already have an account? "}
+              <span
+                className="text-green-400 cursor-pointer hover:underline font-semibold"
+                onClick={() => {
+                    setIsLoginForm(!isLoginFrom);
+                    setError("");
+                }}
+              >
+                {isLoginFrom ? "Sign up" : "Login"}
+              </span>
+            </p>
           </div>
         </div>
       </div>

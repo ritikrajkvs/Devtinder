@@ -51,12 +51,12 @@ const ChatWindow = () => {
   };
 
   return (
-    <div className="flex h-[85vh] container mx-auto px-4 py-6 max-w-7xl gap-4">
+    <div className="flex h-[85vh] container mx-auto px-4 py-6 max-w-7xl gap-4 overflow-hidden">
        
        {/* LEFT SIDE: Chat (Shrinks when Code Editor is open) */}
-       <div className={`flex flex-col transition-all duration-300 ${showCode ? 'w-1/2' : 'w-full'}`}>
+       <div className={`flex flex-col transition-all duration-300 h-full ${showCode ? 'w-1/2' : 'w-full'}`}>
            {/* Header */}
-           <div className="bg-[#1e293b]/80 backdrop-blur-xl border border-white/5 p-4 rounded-t-3xl shadow-lg flex items-center justify-between">
+           <div className="bg-[#1e293b]/80 backdrop-blur-xl border border-white/5 p-4 rounded-t-3xl shadow-lg flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
                     <div className="avatar online">
                         <div className="w-12 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
@@ -72,7 +72,7 @@ const ChatWindow = () => {
                 {/* TOGGLE BUTTON */}
                 <button 
                   onClick={() => setShowCode(!showCode)}
-                  className="btn btn-primary btn-sm"
+                  className={`btn btn-sm ${showCode ? 'btn-error' : 'btn-primary'}`}
                 >
                   {showCode ? "Close Code" : "Code Together 👨‍💻"}
                 </button>
@@ -93,7 +93,7 @@ const ChatWindow = () => {
            </div>
 
            {/* Input Area */}
-           <div className="bg-[#1e293b]/80 backdrop-blur-xl border border-white/5 p-4 rounded-b-3xl shadow-lg">
+           <div className="bg-[#1e293b]/80 backdrop-blur-xl border border-white/5 p-4 rounded-b-3xl shadow-lg shrink-0">
                <div className="flex gap-2">
                    <input 
                      type="text" 
@@ -110,7 +110,7 @@ const ChatWindow = () => {
 
        {/* RIGHT SIDE: Code Editor (Only shows when toggled) */}
        {showCode && (
-         <div className="w-1/2 h-full rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+         <div className="w-1/2 h-full rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-slide-in">
             <CodeEditor 
               userId={userId} 
               targetUserId={targetUserId} 

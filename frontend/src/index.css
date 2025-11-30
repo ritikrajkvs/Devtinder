@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  /* Deep dark background with a subtle gradient for a modern feel */
+  background: radial-gradient(circle at top, #1f2937, #111827);
+  min-height: 100vh;
+  color: #e5e7eb; /* Gray-200 for text */
+  font-family: 'Inter', sans-serif; /* Ensure you have a nice font linked in index.html, or it defaults to sans */
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #111827; 
+}
+::-webkit-scrollbar-thumb {
+  background: #374151; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563; 
+}

@@ -53,7 +53,7 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {/* Signed in as (Username) */}
             <div className="hidden md:flex flex-col items-end mr-2">
-              <span className="text-xs text-gray-400">Signed in as</span>
+              <span className="text-xs text-gray-400">SIGNED IN AS</span>
               <span className="text-sm font-bold text-white tracking-wide">
                 {user.firstName}
               </span>

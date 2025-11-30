@@ -6,110 +6,74 @@ const dotenv = require("dotenv");
 dotenv.config({});
 const cors = require("cors");
 const path = require("path");
-const chatRouter = require("./src/routes/chat");
 
-// 1. Import http and Server from socket.io
+// Routes
+const authRouter = require("./src/routes/auth");
+const profileRouter = require("./src/routes/profile");
+const requestRouter = require("./src/routes/request");
+const userRouter = require("./src/routes/user");
+const chatRouter = require("./src/routes/chat"); // Ensure this file exists
+
 const http = require("http");
 const { Server } = require("socket.io");
 
-// 2. Create an HTTP server from the Express app
 const server = http.createServer(app);
 
-// 3. Initialize Socket.IO with CORS configuration
+// 1. SETUP SOCKET.IO CORS
 const io = new Server(server, {
   cors: {
-    // FIX: Allow both Localhost (for dev) and Netlify (for prod)
-    origin: [
-      "http://localhost:5173", // Vite local
-      "http://localhost:3000", // React local
-      "https://ubiquitous-naiad-ba85d9.netlify.app", // Production
-    ],
+    origin: "https://ubiquitous-naiad-ba85d9.netlify.app", // Your Netlify URL
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
-// ✅ Middlewares (order matters!)
+// 2. SETUP EXPRESS CORS (Must match frontend URL exactly)
 app.use(
   cors({
-    // FIX: Allow both Localhost and Netlify
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "https://ubiquitous-naiad-ba85d9.netlify.app",
-    ],
+    origin: "https://ubiquitous-naiad-ba85d9.netlify.app", 
     credentials: true,
   })
 );
+
 app.use(express.json());
-app.use(cookieParser());   
+app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
-//routes
-const authRouter = require("./src/routes/auth");
-const profileRouter = require("./src/routes/profile");
-const requestRouter = require("./src/routes/request");
-const userRouter = require("./src/routes/user");
-const Message = require("./src/Models/message");
-
-// FIX: Ensure these match the frontend calls (e.g., /api/user/feed)
+// 3. DEFINE ROUTES
+// These prefixes must match your frontend BASE_URL + Route
 app.use("/api", authRouter);
 app.use("/api", profileRouter);
 app.use("/api", requestRouter);
 app.use("/api", userRouter);
 app.use("/api", chatRouter);
 
-// 4. Add Socket.IO connection logic
-const userSocketMap = {}; // Maps userId to socketId
-
+// Socket Logic
+const userSocketMap = {}; 
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
-
   const userId = socket.handshake.query.userId;
-  if (userId) {
-    userSocketMap[userId] = socket.id;
-  }
-  
-  // Emit online users list to all clients
+  if (userId) userSocketMap[userId] = socket.id;
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
     const receiverSocketId = userSocketMap[receiverId];
     if (receiverSocketId) {
-      // Send the message to the specific receiver
-      io.to(receiverSocketId).emit("newMessage", {
-        senderId,
-        message,
-      });
-      const newMessage = new Message({
-        senderId,
-        receiverId,
-        message,
-      });
-      await newMessage.save();
+      io.to(receiverSocketId).emit("newMessage", { senderId, message });
     }
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-    // Remove user from the map and update online users list
     for (let id in userSocketMap) {
-      if (userSocketMap[id] === socket.id) {
-        delete userSocketMap[id];
-        break;
-      }
+      if (userSocketMap[id] === socket.id) delete userSocketMap[id];
     }
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
 
-// 5. Change app.listen to server.listen
 connectDB().then(() => {
-  try {
-    server.listen(process.env.PORT, () => {
-      console.log(`Server running on ` + process.env.PORT);
-    });
-  } catch (error) {
-    console.log(error);
-  }
+  server.listen(process.env.PORT || 7777, () => {
+    console.log(`Server running on port ${process.env.PORT || 7777}`);
+  });
+}).catch((err) => {
+  console.error("Database connection failed:", err);
 });

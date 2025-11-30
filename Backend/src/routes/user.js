@@ -1,56 +1,58 @@
+// Backend/src/routes/user.js (UPDATED)
 const express = require("express");
 const userRouter = express.Router();
 const { userAuth } = require("../Middlewares/auth");
 const { ConnectionRequestModel } = require("../Models/connectionRequest");
 const User = require("../Models/user");
+const asyncHandler = require("../utils/asyncHandler"); // <--- NEW IMPORT
 
+// The data fields that are safe to expose in the feed and connections
 const USER_SAFE_DATA = "firstName lastName photoURL about age gender skills";
 
-userRouter.get("/user/requests/recieved", userAuth, async (req, res) => {
-  try {
+// Route 1: Recieved Requests (Using asyncHandler, Lean for performance)
+userRouter.get("/user/requests/recieved", userAuth, asyncHandler(async (req, res) => {
     const loggedInUser = req.user;
     const connectionRequests = await ConnectionRequestModel.find({
       toUserId: loggedInUser._id,
       status: "intrested",
-    }).populate("fromUserId", USER_SAFE_DATA);
-    if (connectionRequests) {
-      return res.status(200).json({
-        connectionRequests,
-      });
-    }
-  } catch (error) {
-    res.status(400).send("ERROR:" + error.message);
-  }
-});
+    })
+    .populate("fromUserId", USER_SAFE_DATA)
+    .lean(); // CRITICAL: Use .lean() for faster query results
 
-userRouter.get("/user/connections", userAuth, async (req, res) => {
-  try {
+    return res.status(200).json({
+      connectionRequests: connectionRequests || [],
+    });
+}));
+
+// Route 2: Connections (Using asyncHandler, Lean for performance)
+userRouter.get("/user/connections", userAuth, asyncHandler(async (req, res) => {
     const loggedInUser = req.user;
-    console.log(loggedInUser);
+    
     const connectionRequests = await ConnectionRequestModel.find({
       $or: [
         { toUserId: loggedInUser._id, status: "accepted" },
         { fromUserId: loggedInUser._id, status: "accepted" },
       ],
-    }).populate("fromUserId toUserId", USER_SAFE_DATA);
+    })
+    .populate("fromUserId toUserId", USER_SAFE_DATA)
+    .lean(); // CRITICAL: Use .lean() for faster query results
 
     const data = connectionRequests.map((row) => {
-      if (row.fromUserId._id.toString() == loggedInUser._id.toString()) {
+      // Use Mongoose .equals() for robust ID comparison
+      if (row.fromUserId._id.equals(loggedInUser._id)) { 
         return row.toUserId;
       }
+      // Since .lean() is used, the populated fields are plain objects/IDs
       return row.fromUserId;
     });
 
     res.status(200).json({
       data,
     });
-  } catch (error) {
-    res.status(400).send("ERROR :" + error.message);
-  }
-});
+}));
 
-userRouter.get("/user/feed", userAuth, async (req, res) => {
-  try {
+// Route 3: Feed (Optimized Query and using asyncHandler)
+userRouter.get("/user/feed", userAuth, asyncHandler(async (req, res) => {
     const loggedInUser = req.user;
 
     const page = parseInt(req.query.page || 1);
@@ -58,29 +60,26 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
     limit = limit > 50 ? 50 : limit;
     const skip = (page - 1) * limit;
 
-    const connectionRequest = await ConnectionRequestModel.find({
-      $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
-    }).select("fromUserId toUserId");
-
-    const hideUsersFromFeed = new Set();
-    connectionRequest.forEach((req) => {
-      hideUsersFromFeed.add(req.fromUserId.toString());
-      hideUsersFromFeed.add(req.toUserId.toString());
-    });
-
+    // OPTIMIZATION: Use Mongoose .distinct() to efficiently fetch the IDs of users 
+    // the current user has already interacted with (sent/received requests).
+    const connectedToUser = await ConnectionRequestModel.distinct("toUserId", { fromUserId: loggedInUser._id });
+    const connectedFromUser = await ConnectionRequestModel.distinct("fromUserId", { toUserId: loggedInUser._id });
+    
+    // Combine all IDs to exclude (self, users sent request to, users received request from)
+    const hideUsersFromFeed = new Set([
+      loggedInUser._id.toString(),
+      ...connectedToUser.map(id => id.toString()),
+      ...connectedFromUser.map(id => id.toString()),
+    ]);
+    
     const users = await User.find({
-      $and: [
-        { _id: { $nin: Array.from(hideUsersFromFeed) } },
-        { _id: { $ne: loggedInUser._id } },
-      ],
+      _id: { $nin: Array.from(hideUsersFromFeed) },
     })
       .select(USER_SAFE_DATA)
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean(); // CRITICAL: Use .lean() for maximum read performance
 
-    res.send(users);
-  } catch (error) {
-    res.status(400).send("ERROR: " + error.message);
-  }
-});
+    res.status(200).send(users);
+}));
 module.exports = userRouter;

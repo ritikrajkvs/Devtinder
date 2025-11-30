@@ -53,7 +53,7 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {/* Signed in as (Username) */}
             <div className="hidden md:flex flex-col items-end mr-2">
-              <span className="text-xs text-gray-400">SIGNED IN AS</span>
+              <span className="text-xs text-gray-400">Signed in as</span>
               <span className="text-sm font-bold text-white tracking-wide">
                 {user.firstName}
               </span>
@@ -75,7 +75,9 @@ const Navbar = () => {
               >
                 <div className="px-4 py-3 border-b border-white/5 mb-2">
                    <p className="font-bold text-white">My Account</p>
-                   <p className="text-xs text-gray-500 truncate">{user.email || "developer@example.com"}</p>
+                   <p className="text-xs text-gray-500 truncate" title={user.emailId}>
+                      {user.emailId || "user@devtinder.com"}
+                   </p>
                 </div>
                 <li>
                   <Link to="/profile" className="py-3 hover:bg-white/5 hover:text-white rounded-xl transition-colors">

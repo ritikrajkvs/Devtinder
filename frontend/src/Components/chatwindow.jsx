@@ -4,13 +4,13 @@ import { useParams } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
 import { createSocketConnection } from "../utils/socket";
 import { useSelector } from "react-redux";
-import CodeEditor from "./CodeEditor"; // Import the new component
+import CodeEditor from "./CodeEditor";
 
 const ChatWindow = () => {
   const { targetUserId } = useParams();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [showCode, setShowCode] = useState(false); // Toggle state for Editor
+  const [showCode, setShowCode] = useState(false);
   const user = useSelector((store) => store.user);
   const userId = user?._id;
 
@@ -53,8 +53,9 @@ const ChatWindow = () => {
   return (
     <div className="flex h-[85vh] container mx-auto px-4 py-6 max-w-7xl gap-4 overflow-hidden">
        
-       {/* LEFT SIDE: Chat (Shrinks when Code Editor is open) */}
-       <div className={`flex flex-col transition-all duration-300 h-full ${showCode ? 'w-1/2' : 'w-full'}`}>
+       {/* LEFT SIDE: Chat */}
+       {/* FIX: Use calc() to handle width perfectly with the gap */}
+       <div className={`flex flex-col transition-all duration-300 h-full ${showCode ? 'w-[calc(50%-0.5rem)]' : 'w-full'}`}>
            {/* Header */}
            <div className="bg-[#1e293b]/80 backdrop-blur-xl border border-white/5 p-4 rounded-t-3xl shadow-lg flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
@@ -69,7 +70,6 @@ const ChatWindow = () => {
                     </div>
                 </div>
 
-                {/* TOGGLE BUTTON */}
                 <button 
                   onClick={() => setShowCode(!showCode)}
                   className={`btn btn-sm ${showCode ? 'btn-error' : 'btn-primary'}`}
@@ -78,7 +78,7 @@ const ChatWindow = () => {
                 </button>
            </div>
 
-           {/* Messages Area */}
+           {/* Messages */}
            <div className="flex-1 bg-[#0f172a]/50 border-x border-white/5 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-700">
               {messages.map((msg, index) => {
                   const isMe = msg.senderId === userId;
@@ -92,7 +92,7 @@ const ChatWindow = () => {
               })}
            </div>
 
-           {/* Input Area */}
+           {/* Input */}
            <div className="bg-[#1e293b]/80 backdrop-blur-xl border border-white/5 p-4 rounded-b-3xl shadow-lg shrink-0">
                <div className="flex gap-2">
                    <input 
@@ -108,9 +108,10 @@ const ChatWindow = () => {
            </div>
        </div>
 
-       {/* RIGHT SIDE: Code Editor (Only shows when toggled) */}
+       {/* RIGHT SIDE: Code Editor */}
+       {/* FIX: Rendered with explicit width calculation to avoid overflow */}
        {showCode && (
-         <div className="w-1/2 h-full rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-slide-in">
+         <div className="w-[calc(50%-0.5rem)] h-full rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-[#1e1e1e]">
             <CodeEditor 
               userId={userId} 
               targetUserId={targetUserId} 

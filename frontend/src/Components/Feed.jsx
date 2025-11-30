@@ -1,3 +1,4 @@
+// frontend/src/Components/Feed.jsx
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { BASE_URL } from "../utils/constants";
@@ -8,17 +9,16 @@ import UserCard from "./UserCard";
 const Feed = () => {
   const dispatch = useDispatch();
   const feed = useSelector((store) => store.feed);
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true);
 
   const getFeed = async () => {
-    // If we already have users, don't refetch
+    // If feed already has data, stop loading and return
     if (feed && feed.length > 0) {
-        setIsLoading(false);
-        return;
+      setIsLoading(false);
+      return;
     }
 
     try {
-      // BASE_URL already has /api, so we add /user/feed
       const response = await axios.get(BASE_URL + "/user/feed", {
         withCredentials: true,
       });
@@ -31,9 +31,16 @@ const Feed = () => {
   };
 
   useEffect(() => {
-    getFeed();
-  }, []); 
+    // Only fetch if feed is strictly NULL (initial state)
+    // If it is [] (empty array), it means we fetched and found no one.
+    if (feed === null) {
+        getFeed();
+    } else {
+        setIsLoading(false);
+    }
+  }, [feed]); 
 
+  // Loading Spinner
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-64px)]">
@@ -42,14 +49,15 @@ const Feed = () => {
     );
   }
 
-  // FIX: Check if feed is NULL or EMPTY before accessing length
+  // Empty State Message
   if (!feed || feed.length === 0)
     return (
       <h1 className="flex justify-center mt-32 text-4xl font-extrabold text-gray-700 p-8 text-center">
         🎉 All caught up! No more developers in your feed.
       </h1>
     );
-    
+
+  // Render Cards
   return (
     <div className="flex flex-col items-center gap-6 my-8">
       {feed.map((user) => (

@@ -24,7 +24,7 @@ const Navbar = () => {
   return (
     <div className="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-[#0f172a]/80 backdrop-blur-xl border-b border-white/5 shadow-2xl supports-[backdrop-filter]:bg-[#0f172a]/60">
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-        
+
         {/* Logo Section */}
         <Link to="/" className="flex items-center gap-3 group">
           <div className="relative w-10 h-10 flex items-center justify-center bg-gradient-to-tr from-primary to-secondary rounded-xl shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
@@ -50,10 +50,11 @@ const Navbar = () => {
           </div>
         </Link>
 
-        {/* FIX: User section placeholder */}
+        {/* USER SECTION */}
         {user ? (
-          /* REAL USER NAV */
           <div className="flex items-center gap-4">
+
+            {/* Signed In As */}
             <div className="hidden md:flex flex-col items-end mr-2">
               <span className="text-xs text-gray-400">SIGNED IN AS</span>
               <span className="text-sm font-bold text-white tracking-wide">
@@ -68,7 +69,21 @@ const Navbar = () => {
                 className="btn btn-ghost btn-circle avatar ring-2 ring-primary/50 ring-offset-2 ring-offset-[#0f172a] hover:ring-primary transition-all duration-300"
               >
                 <div className="w-10 rounded-full overflow-hidden">
-                  <img alt="User" src={user.photoURL} className="object-cover w-full h-full" />
+
+                  {/* ⭐ FIX: Stable Fallback Avatar */}
+                  <img
+                    alt="User"
+                    src={
+                      user.photoURL ||
+                      "https://i.ibb.co/5vW7t2V/default-avatar.png"
+                    }
+                    onError={(e) => {
+                      e.target.src =
+                        "https://i.ibb.co/5vW7t2V/default-avatar.png";
+                    }}
+                    className="object-cover w-full h-full"
+                  />
+
                 </div>
               </div>
 
@@ -78,7 +93,9 @@ const Navbar = () => {
               >
                 <div className="px-4 py-3 border-b border-white/5 mb-2">
                   <p className="font-bold text-white">My Account</p>
-                  <p className="text-xs text-gray-500 truncate">{user.email || "user@devtinder.com"}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user.email || "user@devtinder.com"}
+                  </p>
                 </div>
 
                 <li>
@@ -113,10 +130,9 @@ const Navbar = () => {
               </ul>
             </div>
           </div>
-
         ) : (
-          /* PLACEHOLDER – keeps layout identical */
-          <div className="w-10 h-10"></div>
+          // Placeholder keeps layout stable (prevents navbar jump)
+          <div className="w-10 h-10" />
         )}
 
       </div>

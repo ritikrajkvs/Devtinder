@@ -18,7 +18,12 @@ const server = http.createServer(app);
 // 3. Initialize Socket.IO with CORS configuration
 const io = new Server(server, {
   cors: {
-    origin: "https://ubiquitous-naiad-ba85d9.netlify.app", // Correct frontend URL
+    // FIX: Allow both Localhost (for dev) and Netlify (for prod)
+    origin: [
+      "http://localhost:5173", // Vite local
+      "http://localhost:3000", // React local
+      "https://ubiquitous-naiad-ba85d9.netlify.app", // Production
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -27,12 +32,17 @@ const io = new Server(server, {
 // ✅ Middlewares (order matters!)
 app.use(
   cors({
-    origin: "https://ubiquitous-naiad-ba85d9.netlify.app", // *** YOU NEED TO UPDATE THIS LINE ***
+    // FIX: Allow both Localhost and Netlify
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://ubiquitous-naiad-ba85d9.netlify.app",
+    ],
     credentials: true,
   })
 );
 app.use(express.json());
-app.use(cookieParser());   // ✅ Add cookie parser middleware here
+app.use(cookieParser());   
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 //routes
@@ -42,6 +52,7 @@ const requestRouter = require("./src/routes/request");
 const userRouter = require("./src/routes/user");
 const Message = require("./src/Models/message");
 
+// FIX: Ensure these match the frontend calls (e.g., /api/user/feed)
 app.use("/api", authRouter);
 app.use("/api", profileRouter);
 app.use("/api", requestRouter);

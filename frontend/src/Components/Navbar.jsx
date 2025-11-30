@@ -76,7 +76,7 @@ const Navbar = () => {
                 <div className="px-4 py-3 border-b border-white/5 mb-2">
                    <p className="font-bold text-white">My Account</p>
                    <p className="text-xs text-gray-500 truncate" title={user.emailId}>
-                      {user.emailId || "user@devtinder.com"}
+                      {user.emailId || "developer@example.com"}
                    </p>
                 </div>
                 <li>

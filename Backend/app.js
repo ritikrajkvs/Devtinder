@@ -7,31 +7,34 @@ dotenv.config({});
 const cors = require("cors");
 const path = require("path");
 
+// 1. IMPORT THE MESSAGE MODEL
+const Message = require("./src/Models/message"); 
+
 // Routes
 const authRouter = require("./src/routes/auth");
 const profileRouter = require("./src/routes/profile");
 const requestRouter = require("./src/routes/request");
 const userRouter = require("./src/routes/user");
-const chatRouter = require("./src/routes/chat"); // Ensure this file exists
+const chatRouter = require("./src/routes/chat");
 
 const http = require("http");
 const { Server } = require("socket.io");
 
 const server = http.createServer(app);
 
-// 1. SETUP SOCKET.IO CORS
+// SETUP SOCKET.IO CORS
 const io = new Server(server, {
   cors: {
-    origin: "https://ubiquitous-naiad-ba85d9.netlify.app", // Your Netlify URL
+    origin: "https://ubiquitous-naiad-ba85d9.netlify.app",
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
-// 2. SETUP EXPRESS CORS (Must match frontend URL exactly)
+// SETUP EXPRESS CORS
 app.use(
   cors({
-    origin: "https://ubiquitous-naiad-ba85d9.netlify.app", 
+    origin: "https://ubiquitous-naiad-ba85d9.netlify.app",
     credentials: true,
   })
 );
@@ -40,8 +43,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
-// 3. DEFINE ROUTES
-// These prefixes must match your frontend BASE_URL + Route
+// DEFINE ROUTES
 app.use("/api", authRouter);
 app.use("/api", profileRouter);
 app.use("/api", requestRouter);
@@ -56,6 +58,13 @@ io.on("connection", (socket) => {
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+    // 2. SAVE MESSAGE TO DATABASE
+    try {
+      await Message.create({ senderId, receiverId, message }); 
+    } catch (err) {
+      console.log(err);
+    }
+
     const receiverSocketId = userSocketMap[receiverId];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", { senderId, message });

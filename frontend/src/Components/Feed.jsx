@@ -9,26 +9,26 @@ import UserCard from "./UserCard";
 const Feed = () => {
   const dispatch = useDispatch();
   const feed = useSelector((store) => store.feed);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true); // Track if DB has more users
+  const [isLoading, setIsLoading] = useState(false); // Start false to rely on logic
+  const [hasMore, setHasMore] = useState(true); // Tracks if DB has more users
 
   const getFeed = async () => {
-    // If we know there are no more users, stop trying
-    if (!hasMore) {
-        setIsLoading(false);
-        return;
-    }
+    // If we've already determined there's no more data, stop.
+    if (!hasMore || isLoading) return;
 
+    setIsLoading(true);
     try {
       const response = await axios.get(BASE_URL + "/user/feed", {
         withCredentials: true,
       });
-      
+
       const newUsers = response.data;
       
+      // If the backend sends an empty array, it means we ran out of users.
       if (newUsers.length === 0) {
-        setHasMore(false); // Stop future fetches
+        setHasMore(false);
       } else {
+        // Add new users to the store
         dispatch(addFeed(newUsers));
       }
     } catch (err) {
@@ -39,41 +39,50 @@ const Feed = () => {
   };
 
   useEffect(() => {
-    // 1. Initial Load: If feed is null
-    // 2. Auto-Refill: If feed exists but is empty (user cleared it)
-    if ((feed === null || feed.length === 0) && hasMore) {
+    // Trigger fetch if:
+    // 1. Feed is null (initial load)
+    // 2. Feed is empty (user swiped all cards) AND we believe there's more data
+    if ((!feed || feed.length === 0) && hasMore) {
       getFeed();
-    } else {
-      setIsLoading(false);
     }
-  }, [feed, hasMore]); // Re-run whenever feed changes (e.g., gets empty)
+  }, [feed, hasMore]); // Re-run whenever feed changes
 
-  if (isLoading) {
+  // Show "All Caught Up" ONLY if feed is empty AND we know there's no more data
+  if ((!feed || feed.length === 0) && !hasMore) {
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-64px)]">
-        <span className="loading loading-dots loading-lg text-primary"></span>
+      <div className="flex flex-col items-center justify-center mt-32 p-8 text-center animate-fade-in">
+        <div className="text-6xl mb-4">🎉</div>
+        <h1 className="text-3xl font-extrabold text-gray-800 mb-2">
+            All caught up!
+        </h1>
+        <p className="text-gray-500 text-lg max-w-md">
+            You've rated all available developers. Check back later for new joins!
+        </p>
       </div>
     );
   }
 
-  // Only show "All caught up" if we are SURE there is no more data
-  if ((!feed || feed.length === 0) && !hasMore)
+  // Show Loading Spinner if loading AND we have no cards to show
+  if (isLoading && (!feed || feed.length === 0)) {
     return (
-      <div className="flex flex-col items-center justify-center mt-32 p-8 text-center animate-fade-in">
-        <h1 className="text-4xl font-extrabold text-gray-700 mb-4">
-            🎉 All caught up!
-        </h1>
-        <p className="text-gray-500 text-lg">
-            No more developers in your area right now.
-        </p>
-      </div>
+        <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+            <span className="loading loading-spinner loading-lg text-secondary"></span>
+        </div>
     );
+  }
 
   return (
-    <div className="flex flex-col items-center gap-6 my-8">
+    <div className="flex flex-col items-center gap-6 my-8 px-4">
       {feed && feed.map((user) => (
         <UserCard key={user._id} user={user} />
       ))}
+      
+      {/* Small loader at bottom if we are fetching more in background */}
+      {isLoading && feed && feed.length > 0 && (
+         <div className="text-gray-400 text-sm font-semibold animate-pulse mt-4">
+            Loading more developers...
+         </div>
+      )}
     </div>
   );
 };

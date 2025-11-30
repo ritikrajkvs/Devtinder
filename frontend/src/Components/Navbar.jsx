@@ -52,7 +52,7 @@ const Navbar = () => {
         {user ? (
           <div className="flex items-center gap-4">
             {/* Signed in as (Username) */}
-            <div className="hidden md:flex flex-col items-end mr-2">
+            <div className="hidden md:flex flex-col items-end">
               <span className="text-xs text-gray-400">SIGNED IN AS</span>
               <span className="text-sm font-bold text-white tracking-wide">
                 {user.firstName}
@@ -65,8 +65,13 @@ const Navbar = () => {
                 role="button"
                 className="btn btn-ghost btn-circle avatar ring-2 ring-primary/50 ring-offset-2 ring-offset-[#0f172a] hover:ring-primary transition-all duration-300"
               >
-                <div className="w-10 rounded-full overflow-hidden">
-                  <img alt="User" src={user.photoURL} className="object-cover w-full h-full" />
+                <div className="w-10 h-10 rounded-full overflow-hidden">
+                  <img 
+                    alt="User" 
+                    src={user.photoURL} 
+                    className="object-cover w-full h-full"
+                    onError={(e) => {e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}}
+                  />
                 </div>
               </div>
               <ul

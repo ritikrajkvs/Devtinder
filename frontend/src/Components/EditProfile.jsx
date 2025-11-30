@@ -1,212 +1,170 @@
-import React, { useState, useRef } from "react";
-import UserCard from "./UserCard";
+import { useState } from "react";
 import axios from "axios";
-import { BASE_URL } from "../utils/constants";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
+import { BASE_URL } from "../utils/constants";
+import UserCard from "./UserCard";
 
 const EditProfile = ({ user }) => {
-  const [firstName, setFirstname] = useState(user.firstName);
+  const [firstName, setFirstName] = useState(user.firstName);
   const [lastName, setLastName] = useState(user.lastName);
   const [photoURL, setPhotoURL] = useState(user.photoURL);
   const [age, setAge] = useState(user.age || "");
-  const [gender, setGender] = useState(user.gender);
-  const [about, setAbout] = useState(user.about);
-  // **FIX**: Manage skills as a string in the state
-  const [skills, setSkills] = useState(user.skills ? user.skills.join(", ") : "");
+  const [gender, setGender] = useState(user.gender || "");
+  const [about, setAbout] = useState(user.about || "");
+  const [skills, setSkills] = useState(user.skills ? user.skills.join(", ") : ""); // Simplified skills handling
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
   const dispatch = useDispatch();
-  const fileInputRef = useRef(null);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setPhotoURL(URL.createObjectURL(file));
-    }
-  };
-
-  const saveProfile = async () => {
+  const handleSaveProfile = async () => {
     setError("");
     try {
-      const formData = new FormData();
-      formData.append("firstName", firstName);
-      formData.append("lastName", lastName);
-     // formData.append("photoURL", photoURL);
-      formData.append("age", age);
-      formData.append("gender", gender);
-      formData.append("about", about);
-      formData.append("skills", skills); // Send skills as a comma-separated string
+      // Basic skills parsing: split by comma and trim
+      const skillsArray = skills.split(",").map(skill => skill.trim()).filter(s => s.length > 0);
 
-      if (imageFile) {
-        formData.append("photo", imageFile);
-      }
-
-      const res = await axios.post(
+      const res = await axios.patch(
         BASE_URL + "/profile/edit",
-        formData,
         {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+          firstName,
+          lastName,
+          photoURL,
+          age,
+          gender,
+          about,
+          skills: skillsArray 
+        },
+        { withCredentials: true }
       );
-      dispatch(addUser(res.data.data));
+      dispatch(addUser(res?.data?.data));
       setShowToast(true);
-      setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
-    } catch (error) {
-      setError(error.response?.data?.message || "An error occurred");
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (err) {
+      setError(err.response?.data || "Failed to update profile.");
     }
   };
 
   return (
-    <>
-      <div className="flex justify-center my-10 max ">
-        <div className="flex justify-center mx-10 ">
-          <div className="card bg-base-300 w-96 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title justify-center">Edit Profile</h2>
-              <div>
-                <label className="form-control w-full max-w-xs my-2">
-                  <div className="label">
-                    <span className="label-text">First Name</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstname(e.target.value)}
-                    className="input input-bordered w-full max-w-xs"
-                  />
-                </label>
-                <label className="form-control w-full max-w-xs my-2">
-                  <div className="label">
-                    <span className="label-text">Last Name</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="input input-bordered w-full max-w-xs"
-                  />
-                </label>
-                <label className="form-control w-full max-w-xs my-2">
-                  <div className="label">
-                    <span className="label-text">Age</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    className="input input-bordered w-full max-w-xs"
-                  />
-                </label>
-                <div className="form-control w-full max-w-xs my-2">
-                    <div className="label">
-                        <span className="label-text">Photo</span>
-                    </div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        className="hidden"
-                        accept="image/*"
-                    />
-                    <button
-                        onClick={() => fileInputRef.current.click()}
-                        className="btn btn-outline w-full max-w-xs"
-                    >
-                        Upload Photo
-                    </button>
-                </div>
-                <label className="form-control w-full max-w-xs my-2">
-                  <div className="label">
-                    <span className="label-text">Gender</span>
-                  </div>
-                  <div className="dropdown">
-                    <div tabIndex={0} role="button" className="btn m-1">
-                      {gender || "Select gender"}
-                    </div>
-                    <ul
-                      tabIndex={0}
-                      className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
-                    >
-                      <li>
-                        <button onClick={() => setGender("Male")}>Male</button>
-                      </li>
-                      <li>
-                        <button onClick={() => setGender("Female")}>
-                          Female
-                        </button>
-                      </li>
-                      <li>
-                        <button onClick={() => setGender("Others")}>
-                          Others
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                </label>
-                <label className="form-control w-full max-w-xs my-2">
-                  <div className="label">
-                    <span className="label-text">Skills</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={skills}
-                    // **FIX**: Directly set the string value on change
-                    onChange={(e) => setSkills(e.target.value)}
-                    className="input input-bordered w-full max-w-xs"
-                  />
-                </label>
+    <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-8">
+      
+      {/* 1. Edit Form Section */}
+      <div className="flex-1">
+          <div className="bg-[#1e293b]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
+            <h1 className="text-3xl font-bold text-white mb-2">Edit Profile</h1>
+            <p className="text-gray-400 text-sm mb-8">Update your personal details and developer stack.</p>
 
-                <label className="form-control w-full max-w-xs my-2">
-                  <div className="label">
-                    <span className="label-text">About</span>
-                  </div>
-                  <textarea
-                    placeholder="Bio"
+            <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide ml-1">First Name</label>
+                        <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="input input-bordered w-full bg-[#0f172a] border-gray-700 text-white rounded-xl h-12"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide ml-1">Last Name</label>
+                        <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="input input-bordered w-full bg-[#0f172a] border-gray-700 text-white rounded-xl h-12"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide ml-1">Photo URL</label>
+                    <input
                     type="text"
+                    value={photoURL}
+                    onChange={(e) => setPhotoURL(e.target.value)}
+                    className="input input-bordered w-full bg-[#0f172a] border-gray-700 text-white rounded-xl h-12"
+                    placeholder="https://..."
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide ml-1">Age</label>
+                        <input
+                        type="number"
+                        value={age}
+                        onChange={(e) => setAge(e.target.value)}
+                        className="input input-bordered w-full bg-[#0f172a] border-gray-700 text-white rounded-xl h-12"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide ml-1">Gender</label>
+                        <select
+                            value={gender}
+                            onChange={(e) => setGender(e.target.value)}
+                            className="select select-bordered w-full bg-[#0f172a] border-gray-700 text-white rounded-xl h-12"
+                        >
+                            <option value="" disabled>Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide ml-1">About</label>
+                    <textarea
                     value={about}
                     onChange={(e) => setAbout(e.target.value)}
-                    className="input input-bordered w-full max-w-xs"
-                  ></textarea>
-                </label>
-              </div>
-              <p className="text-red-500 text-center">{error}</p>
-              <div className="card-actions justify-center mt-2">
-                <button className="btn btn-primary" onClick={saveProfile}>
-                  Save Profile
-                </button>
-              </div>
+                    className="textarea textarea-bordered w-full bg-[#0f172a] border-gray-700 text-white rounded-xl min-h-[120px] leading-relaxed"
+                    placeholder="Tell us about yourself..."
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide ml-1">Skills (Comma Separated)</label>
+                    <input
+                        type="text"
+                        value={skills}
+                        onChange={(e) => setSkills(e.target.value)}
+                        className="input input-bordered w-full bg-[#0f172a] border-gray-700 text-white rounded-xl h-12"
+                        placeholder="JavaScript, React, Node.js..."
+                    />
+                </div>
+
+                {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
+                
+                <div className="pt-4">
+                    <button
+                        onClick={handleSaveProfile}
+                        className="btn btn-primary w-full h-14 rounded-2xl text-white font-bold text-lg shadow-lg shadow-primary/25 hover:scale-[1.01] transition-transform"
+                    >
+                        Save Changes
+                    </button>
+                </div>
             </div>
           </div>
-        </div>
-        <UserCard
-          user={{ 
-            firstName, 
-            lastName, 
-            photoURL, 
-            about, 
-            age, 
-            gender, 
-            // **FIX**: Convert skills string to an array for the preview card
-            skills: skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : []
-          }}
-        />
       </div>
+
+      {/* 2. Live Preview Section */}
+      <div className="hidden lg:block w-[400px]">
+         <div className="sticky top-28">
+            <h3 className="text-gray-400 font-semibold mb-4 text-center text-sm uppercase tracking-widest">Live Preview</h3>
+            <UserCard
+            user={{ firstName, lastName, photoURL, age, gender, about, skills: skills.split(",").map(s => s.trim()).filter(s => s) }}
+            />
+         </div>
+      </div>
+
+      {/* Toast Notification */}
       {showToast && (
-        <div className="toast toast-top toast-center pt-20 ">
-          <div className="alert alert-success">
-            <span>Profile saved successfully</span>
+        <div className="toast toast-top toast-center z-50">
+          <div className="alert alert-success bg-green-500 text-white border-none shadow-lg rounded-xl">
+            <span className="font-semibold">Profile updated successfully!</span>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

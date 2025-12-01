@@ -70,22 +70,7 @@ io.on("connection", (socket) => {
       io.to(receiverSocketId).emit("newMessage", { senderId, message });
     }
   });
-  // ... inside io.on("connection", (socket) => { ...
 
- // 🚀 NEW: Collaborative Coding Logic
-  
-  // 1. Join a specific "Coding Room"
-  socket.on("joinCodeRoom", ({ roomId }) => {
-    socket.join(roomId);
-  });
-
-  // 2. Sync Code Changes
-  socket.on("sendCode", ({ roomId, code }) => {
-    // Send the new code to everyone in the room EXCEPT the person typing
-    socket.to(roomId).emit("codeUpdate", code);
-  }); 
-
-// ... end of io.on })
   socket.on("disconnect", () => {
     for (let id in userSocketMap) {
       if (userSocketMap[id] === socket.id) delete userSocketMap[id];

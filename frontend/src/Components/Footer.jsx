@@ -7,7 +7,7 @@ const Footer = () => {
              <span className="font-bold text-white text-xl">DevTinder</span>
           </div>
           <p className="font-medium">
-            Connecting Developers Since 2024. <br />
+            Connecting Developers Since 2025. <br />
             Built with React, Node, and ❤️.
           </p>
           <p>Copyright © {new Date().getFullYear()} - All rights reserved</p>

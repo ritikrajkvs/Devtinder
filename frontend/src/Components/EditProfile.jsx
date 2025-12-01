@@ -12,7 +12,8 @@ const EditProfile = ({ user }) => {
   const [age, setAge] = useState(user.age || "");
   const [gender, setGender] = useState(user.gender || "");
   const [about, setAbout] = useState(user.about || "");
-  const [skills, setSkills] = useState(user.skills ? user.skills.join(", ") : ""); // Simplified skills handling
+  const [skills, setSkills] = useState(user.skills ? user.skills.join(", ") : ""); 
+  const [photo, setPhoto] = useState(null); // New state for file upload
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
   const dispatch = useDispatch();
@@ -20,27 +21,42 @@ const EditProfile = ({ user }) => {
   const handleSaveProfile = async () => {
     setError("");
     try {
-      // Basic skills parsing: split by comma and trim
-      const skillsArray = skills.split(",").map(skill => skill.trim()).filter(s => s.length > 0);
+      // Create FormData to handle file upload
+      const formData = new FormData();
+      formData.append("firstName", firstName);
+      formData.append("lastName", lastName);
+      formData.append("age", age);
+      formData.append("gender", gender);
+      formData.append("about", about);
+      formData.append("skills", skills); // Backend splits this string
+      
+      // Only append photo if a new file is selected
+      if (photo) {
+        formData.append("photo", photo);
+      }
 
-      const res = await axios.patch(
+      const res = await axios.post(
         BASE_URL + "/profile/edit",
-        {
-          firstName,
-          lastName,
-          photoURL,
-          age,
-          gender,
-          about,
-          skills: skillsArray 
-        },
-        { withCredentials: true }
+        formData,
+        { 
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
+      
       dispatch(addUser(res?.data?.data));
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (err) {
-      setError(err.response?.data || "Failed to update profile.");
+      setError(err.response?.data?.message || "Failed to update profile.");
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhoto(file);
+      setPhotoURL(URL.createObjectURL(file)); // Update preview
     }
   };
 
@@ -75,15 +91,22 @@ const EditProfile = ({ user }) => {
                     </div>
                 </div>
 
+                {/* Updated Photo Section */}
                 <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide ml-1">Photo URL</label>
-                    <input
-                    type="text"
-                    value={photoURL}
-                    onChange={(e) => setPhotoURL(e.target.value)}
-                    className="input input-bordered w-full bg-[#0f172a] border-gray-700 text-white rounded-xl h-12"
-                    placeholder="https://..."
-                    />
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide ml-1">Profile Photo</label>
+                    <div className="flex items-center gap-4">
+                        <div className="avatar">
+                            <div className="w-12 h-12 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2">
+                                <img src={photoURL} alt="Preview" className="object-cover" />
+                            </div>
+                        </div>
+                        <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="file-input file-input-bordered file-input-primary w-full bg-[#0f172a] border-gray-700 text-white rounded-xl h-12"
+                        />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

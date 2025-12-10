@@ -22,7 +22,8 @@ const Login = () => {
         { firstName, lastName, emailId, password },
         { withCredentials: true }
       );
-      dispatch(addUser(response.data));
+      // FIX: Dispatch response.data.user instead of the whole response.data
+      dispatch(addUser(response.data.user));
       navigate("/profile");
     } catch (err) {
       setError(err.response?.data || "Something went wrong.");
@@ -36,7 +37,8 @@ const Login = () => {
         { emailId, password },
         { withCredentials: true }
       );
-      dispatch(addUser(response.data));
+      // FIX: Dispatch response.data.user instead of the whole response.data
+      dispatch(addUser(response.data.user));
       navigate("/");
     } catch (err) {
       setError(err.response?.data || "Invalid credentials.");
